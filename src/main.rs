@@ -2,6 +2,7 @@ use crate::configuration::Commands;
 use anyhow::Result;
 use clap::Parser;
 
+mod common;
 mod configuration;
 mod create;
 mod verbose;

@@ -6,8 +6,8 @@ use clap::{ArgAction, Parser, Subcommand};
     version,
     about,
     long_about = r#"
-This utility is an extension of git-branchless to make it easier to turn small
-commits into Github PRs that are stacked on each other."#
+An extension of git-branchless to make it easier to turn small commits into
+Github PRs that are stacked on each other."#
 )]
 pub struct Options {
     #[arg(short, long, action = ArgAction::Count, help = r#"Increase the debugging output of the command. Accepted multiple times

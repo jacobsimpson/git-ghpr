@@ -25,3 +25,7 @@ pub enum Commands {
         branch_prefix: Option<String>,
     },
 }
+
+pub fn load() -> Options {
+    Options::parse()
+}

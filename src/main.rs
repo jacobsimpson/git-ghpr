@@ -1,7 +1,5 @@
 use std::process::ExitCode;
 
-use clap::Parser;
-
 use crate::configuration::Commands;
 use crate::result::Message;
 use crate::result::Result;
@@ -14,7 +12,7 @@ mod verbose;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    let options = configuration::Options::parse();
+    let options = configuration::load();
 
     verbose::init(options.verbose);
 

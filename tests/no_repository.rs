@@ -1,7 +1,7 @@
 use anyhow::Result;
 use assert_cmd::assert::OutputAssertExt;
 use speculoos::prelude::*;
-use tempdir::TempDir;
+use tempfile::tempdir;
 
 #[test]
 fn without_valid_repository() -> Result<()> {
@@ -11,7 +11,7 @@ fn without_valid_repository() -> Result<()> {
         .current_target()
         .run()?;
 
-    let tmp_dir = TempDir::new("prtest")?;
+    let tmp_dir = tempdir()?;
 
     std::env::set_current_dir(&tmp_dir)?;
     let output = bin_under_test.command().arg("create").output()?;

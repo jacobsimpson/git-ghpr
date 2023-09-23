@@ -5,11 +5,16 @@ use tracing_subscriber::prelude::*;
 pub fn init(verbose_level: u8) {
     let filter_layer = match verbose_level {
         0 => Targets::new().with_default(LevelFilter::OFF),
-        1 => Targets::new().with_target("git-github-pull-request", LevelFilter::ERROR),
-        2 => Targets::new().with_target("git-github-pull-request", LevelFilter::WARN),
-        3 => Targets::new().with_target("git-github-pull-request", LevelFilter::INFO),
-        4 => Targets::new().with_target("git-github-pull-request", LevelFilter::DEBUG),
-        5 => Targets::new().with_target("git-github-pull-request", LevelFilter::TRACE),
+        1 => Targets::new()
+            .with_target("git-github-pull-request", LevelFilter::ERROR),
+        2 => Targets::new()
+            .with_target("git-github-pull-request", LevelFilter::WARN),
+        3 => Targets::new()
+            .with_target("git-github-pull-request", LevelFilter::INFO),
+        4 => Targets::new()
+            .with_target("git-github-pull-request", LevelFilter::DEBUG),
+        5 => Targets::new()
+            .with_target("git-github-pull-request", LevelFilter::TRACE),
         6 => Targets::new().with_default(LevelFilter::ERROR),
         7 => Targets::new().with_default(LevelFilter::WARN),
         8 => Targets::new().with_default(LevelFilter::INFO),

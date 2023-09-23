@@ -14,6 +14,8 @@ async fn main() -> Result<()> {
     verbose::init(options.verbose);
 
     match options.command {
-        Commands::Create { branch_prefix: _ } => create::create_pull_request().await,
+        Commands::Create { branch_prefix: _ } => {
+            create::create_pull_request().await
+        }
     }
 }

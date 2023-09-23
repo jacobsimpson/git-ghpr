@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
@@ -10,6 +10,10 @@ This utility is an extension of git-branchless to make it easier to turn small
 commits into Github PRs that are stacked on each other."#
 )]
 pub struct Options {
+    #[arg(short, long, action = ArgAction::Count, help = r#"Increase the debugging output of the command. Accepted multiple times
+for more information."#)]
+    pub verbose: u8,
+
     #[command(subcommand)]
     pub command: Commands,
 }

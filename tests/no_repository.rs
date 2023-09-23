@@ -18,9 +18,8 @@ fn without_valid_repository() -> Result<()> {
 
     let stderr = String::from_utf8(output.stderr.clone())?;
 
-    // Error: could not find repository from '.'; class=Repository (6); code=NotFound (-3)
     assert_that(&stderr)
-        .starts_with("Error: could not find repository from '.';");
+        .starts_with("Could not find a repository. Has `git init` been run?");
 
     output.assert().failure();
 

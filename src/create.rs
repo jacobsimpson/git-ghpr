@@ -1,9 +1,11 @@
-use crate::common::get_selected_commit;
-use anyhow::Result;
 use git2::Repository;
 use tracing::info;
 
-pub async fn create_pull_request() -> Result<()> {
+use crate::common::get_selected_commit;
+use crate::result::Message;
+use crate::result::Result;
+
+pub async fn create_pull_request() -> Result<Message> {
     info!("Opening the local git repository.");
     let repo = Repository::discover(".")?;
 
@@ -13,5 +15,5 @@ pub async fn create_pull_request() -> Result<()> {
     info!("and some more stuff.");
 
     println!("Created pull request.");
-    Ok(())
+    Ok(Message::Empty)
 }

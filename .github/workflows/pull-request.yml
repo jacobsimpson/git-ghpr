@@ -1,0 +1,59 @@
+name: pull-request-checks
+run-name: Checking pull request.
+on: [push]
+jobs:
+  cargo-build:
+    runs-on: ubuntu-latest
+    steps:
+      # A lot of the Rust actions come from:
+      # - https://actions-rs.github.io/#toolchain
+
+      # Checkout the code base first so that the `Cargo.lock` file is available
+      # for computing the cache hash.
+      - uses: actions/checkout@v3
+
+      # For details on configuring the cache:
+      # - https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows
+      # To see the cached artifacts:
+      # - https://github.com/jacobsimpson/git-github-pull-request/actions/caches
+      - name: Cache cargo packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: cargo-packages-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-packages-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+            cargo-packages-${{ runner.os }}-
+
+      - name: Stable with rustfmt and clippy
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Release build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --all-features
+
+      - name: Install cargo-audit binary crate
+        uses: actions-rs/install@v0.1
+        with:
+          crate: cargo-audit
+          version: latest
+          use-tool-cache: true
+
+      - name: Annotate commit with clippy warnings
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
+
+      - name: Security audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

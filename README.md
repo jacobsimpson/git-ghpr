@@ -1,2 +1,5 @@
 # git-ghpr
-A CLI utility to bridge the gap between `git-branchless` and Github PRs.
+
+This command is intended to complement the excellent
+[git-branchless](https://github.com/arxanas/git-branchless) project by extending
+the workflow to Github pull request management.

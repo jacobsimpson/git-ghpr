@@ -40,6 +40,11 @@ jobs:
           command: build
           args: --release --all-features
 
+      - name: Release test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
       - name: Install cargo-audit binary crate
         uses: actions-rs/install@v0.1
         with:

@@ -7,6 +7,10 @@ use git2::ErrorCode;
 pub enum Error {
     NoRepository,
     NoSelectedCommit,
+    UnableToCreateBranch {
+        branch_name: String,
+        base_commit: String,
+    },
     Generic,
 }
 
@@ -20,6 +24,14 @@ impl std::fmt::Display for Error {
             Self::NoSelectedCommit => write!(
                 f,
                 "No currently selected commit. Are there any commits on this repository?"
+            ),
+            Self::UnableToCreateBranch {
+                branch_name,
+                base_commit,
+            } => write!(
+                f,
+                "Could not create branch '{}' on commit {}.",
+                branch_name, base_commit
             ),
             Self::Generic => write!(f, "{}", "Generic"),
         }
@@ -37,6 +49,7 @@ impl From<git2::Error> for Error {
         {
             Self::NoSelectedCommit
         } else {
+            println!("Class = {:?}, Code = {:?}", e.class(), e.code());
             Self::Generic
         }
     }

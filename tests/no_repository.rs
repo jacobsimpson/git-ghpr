@@ -12,8 +12,8 @@ fn without_valid_repository() -> Result<()> {
         .run()?;
 
     let tmp_dir = tempdir()?;
-
     std::env::set_current_dir(&tmp_dir)?;
+
     let output = bin_under_test.command().arg("create").output()?;
 
     let stderr = String::from_utf8(output.stderr.clone())?;
@@ -23,7 +23,7 @@ fn without_valid_repository() -> Result<()> {
 
     output.assert().failure();
 
-    // Close explicitly so errors get captured.
+    // Close explicitly so errors get reported.
     tmp_dir.close()?;
 
     Ok(())

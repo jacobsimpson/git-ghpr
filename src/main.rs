@@ -12,7 +12,13 @@ mod verbose;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    let options = configuration::load();
+    let options = match configuration::load() {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("{}", e);
+            return ExitCode::FAILURE;
+        }
+    };
 
     verbose::init(options.verbose);
 
@@ -30,7 +36,7 @@ async fn main() -> ExitCode {
     }
 }
 
-async fn execute(options: configuration::Options) -> Result<Message> {
+async fn execute(options: configuration::Configuration) -> Result<Message> {
     match options.command {
         Commands::Create { branch_prefix: _ } => {
             create::create_pull_request().await

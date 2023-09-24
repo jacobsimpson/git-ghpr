@@ -34,10 +34,10 @@ fn initialized_no_commits() -> Result<()> {
     //
     // Assert.
     //
-    assert_that(&String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that(&String::from_utf8(output.stderr.clone())?)
+    assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
+    assert_that!(String::from_utf8(output.stderr.clone())?)
         .starts_with("No currently selected commit.");
-    assert_that(&output.status.success()).is_false();
+    assert_that!(output.status.success()).is_false();
 
     // Close explicitly so errors get reported.
     t.close()?;
@@ -71,9 +71,9 @@ fn existing_branch() -> Result<()> {
     //
     // Assert.
     //
-    assert_that(&String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that(&String::from_utf8(output.stderr.clone())?).is_empty();
-    assert_that(&output.status.success()).is_true();
+    assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
+    assert_that!(String::from_utf8(output.stderr.clone())?).is_empty();
+    assert_that!(output.status.success()).is_true();
 
     // Close explicitly so errors get reported.
     t.close()?;
@@ -114,9 +114,9 @@ fn no_branch() -> Result<()> {
     //
     // Assert.
     //
-    assert_that(&String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that(&String::from_utf8(output.stderr.clone())?).is_empty();
-    assert_that(&output.status.success()).is_true();
+    assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
+    assert_that!(String::from_utf8(output.stderr.clone())?).is_empty();
+    assert_that!(output.status.success()).is_true();
     assert_that!(current_branch_name(t.path()))
         .is_ok()
         .is_equal_to("branch-name".to_string());

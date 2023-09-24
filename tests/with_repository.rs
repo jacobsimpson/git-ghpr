@@ -1,6 +1,7 @@
 use anyhow::Result;
 use speculoos::prelude::*;
 
+use crate::common::current_branch_name;
 use crate::common::restore_git_repo;
 use crate::common::TEST_BINARY;
 
@@ -116,6 +117,9 @@ fn no_branch() -> Result<()> {
     assert_that(&String::from_utf8(output.stdout.clone())?).is_empty();
     assert_that(&String::from_utf8(output.stderr.clone())?).is_empty();
     assert_that(&output.status.success()).is_true();
+    assert_that!(current_branch_name(t.path()))
+        .is_ok()
+        .is_equal_to("branch-name".to_string());
 
     // Close explicitly so errors get reported.
     t.close()?;

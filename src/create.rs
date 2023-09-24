@@ -76,13 +76,17 @@ fn create_new_branch<'a>(
     )?;
 
     // Create branch.
-    repo.branch(&branch_name, commit, false).map_err(|e| {
-        println!("{:?}", e);
+    let branch = repo.branch(&branch_name, commit, false).map_err(|_e| {
         Error::UnableToCreateBranch {
-            branch_name,
+            branch_name: branch_name.clone(),
             base_commit: commit.id().to_string(),
         }
-    })
+    })?;
+
+    repo.set_head(&format!("refs/heads/{branch_name}"))
+        .map_err(|_e| Error::UnableToSelectBranch(branch_name))?;
+
+    Ok(branch)
 }
 
 fn generate_branch_name(

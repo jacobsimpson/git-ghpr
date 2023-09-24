@@ -1,8 +1,11 @@
 use std::fs::File;
+use std::path::Path;
 use std::path::PathBuf;
 
+use anyhow::anyhow;
 use anyhow::Result;
 use flate2::read::GzDecoder;
+use git2::Repository;
 use tar::Archive;
 use tempfile::{tempdir, TempDir};
 
@@ -21,4 +24,18 @@ pub fn restore_git_repo(tar_gz: &str) -> Result<TempDir> {
     Archive::new(tar_file).unpack(t.path())?;
 
     Ok(t)
+}
+
+pub fn current_branch_name(repository_path: &Path) -> Result<String> {
+    let repo = Repository::discover(repository_path)?;
+
+    let head = repo.head()?;
+
+    if !head.is_branch() {
+        return Err(anyhow!("No branch selected."));
+    }
+
+    head.symbolic_target()
+        .map(|s| s.to_string())
+        .ok_or(anyhow!("No branch selected."))
 }

@@ -17,15 +17,16 @@ pub enum Error {
         branch_name: String,
         base_commit: String,
     },
+    UnableToSelectBranch(String),
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Self::BadParameter(m) => write!(f, "{}", m),
-            Self::BranchTemplateMalformed(m)=>write!(f,"{}", m),
+            Self::BadParameter(m) => write!(f, "{m}"),
+            Self::BranchTemplateMalformed(m)=>write!(f,"{m}"),
             Self::Generic => write!(f, "{}", "Generic"),
-            Self::MissingBranchParameter(p)=>write!(f, "Missing parameter {}",p ),
+            Self::MissingBranchParameter(p)=>write!(f, "Missing parameter {p}"),
             Self::NoCommitMessage=>write!(f, "No commit message available for generating the branch name."),
             Self::NoRepository => write!(
                 f,
@@ -40,9 +41,9 @@ impl std::fmt::Display for Error {
                 base_commit,
             } => write!(
                 f,
-                "Could not create branch '{}' on commit {}.",
-                branch_name, base_commit
+                "Could not create branch '{branch_name}' on commit {base_commit}.",
             ),
+            Self::UnableToSelectBranch(b) => write!(f, "Could not switch to branch '{b}'.")
         }
     }
 }

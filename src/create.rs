@@ -13,7 +13,7 @@ use crate::result::Result;
 /// Creates a pull request for the current commit. This is a safe operation, it
 /// will do it's best to detect the current state of the repository and Github,
 /// and fill in the missing pieces, or return a useful error message.
-/// - Check if there is a remote for the repository.
+/// * Check if there is a remote for the repository.
 /// * Find the current commit.
 /// - Find the base branch.
 /// - Check the base branch is remote.
@@ -30,6 +30,11 @@ pub async fn create_pull_request(
 ) -> Result<Message> {
     info!("Opening the local git repository.");
     let repo = Repository::discover(".")?;
+
+    let remotes = repo.remotes()?;
+    if remotes.len() == 0 {
+        return Err(Error::NoRemote);
+    }
 
     let current_commit = get_selected_commit(&repo)?;
     info!("Current commit = {}", current_commit.id());
@@ -48,10 +53,9 @@ pub async fn create_pull_request(
     };
 
     if let Err(e) = current_branch.upstream() {
-        if e.code() == git2::ErrorCode::NotFound {
-            return Err(Error::NoRemote);
+        if e.code() != git2::ErrorCode::NotFound {
+            return Err(Error::Generic);
         }
-        return Err(Error::Generic);
     }
 
     Ok(Message::Empty)

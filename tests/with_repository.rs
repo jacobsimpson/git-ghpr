@@ -1,5 +1,6 @@
 use anyhow::Result;
 use speculoos::prelude::*;
+use std::path::PathBuf;
 
 use crate::common::current_branch_name;
 use crate::common::restore_git_repo;
@@ -14,7 +15,8 @@ fn initialized_no_commits() -> Result<()> {
     //
     // Arrange.
     //
-    let t = restore_git_repo("initialized_no_commits.tar.gz")?;
+    let (_temp_dir, local_repo) =
+        restore_git_repo("initialized_no_commits.tar.gz")?;
 
     let bin_under_test = escargot::CargoBuild::new()
         .bin(TEST_BINARY)
@@ -27,7 +29,7 @@ fn initialized_no_commits() -> Result<()> {
     //
     let output = bin_under_test
         .command()
-        .current_dir(&t)
+        .current_dir(&local_repo)
         .arg("create")
         .output()?;
 
@@ -36,11 +38,8 @@ fn initialized_no_commits() -> Result<()> {
     //
     assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
     assert_that!(String::from_utf8(output.stderr.clone())?)
-        .starts_with("No currently selected commit.");
+        .starts_with("This repository has no remote.");
     assert_that!(output.status.success()).is_false();
-
-    // Close explicitly so errors get reported.
-    t.close()?;
 
     Ok(())
 }
@@ -51,7 +50,7 @@ fn existing_branch() -> Result<()> {
     //
     // Arrange.
     //
-    let t = restore_git_repo("existing_branch.tar.gz")?;
+    let (_temp_dir, local_repo) = restore_git_repo("existing_branch.tar.gz")?;
 
     let bin_under_test = escargot::CargoBuild::new()
         .bin(TEST_BINARY)
@@ -64,7 +63,7 @@ fn existing_branch() -> Result<()> {
     //
     let output = bin_under_test
         .command()
-        .current_dir(&t)
+        .current_dir(&local_repo)
         .arg("create")
         .output()?;
 
@@ -75,9 +74,6 @@ fn existing_branch() -> Result<()> {
     assert_that!(String::from_utf8(output.stderr.clone())?)
         .is_equal_to("This repository has no remote.\n".to_string());
     assert_that!(output.status.success()).is_false();
-
-    // Close explicitly so errors get reported.
-    t.close()?;
 
     Ok(())
 }
@@ -95,8 +91,7 @@ fn no_branch() -> Result<()> {
     //
     // Arrange.
     //
-    let t = restore_git_repo("no_branch.tar.gz")?;
-    let t = t.into_path();
+    let (_temp_dir, local_repo) = restore_git_repo("no_branch.tar.gz")?;
 
     let bin_under_test = escargot::CargoBuild::new()
         .bin(TEST_BINARY)
@@ -109,7 +104,7 @@ fn no_branch() -> Result<()> {
     //
     let output = bin_under_test
         .command()
-        .current_dir(&t)
+        .current_dir(&local_repo)
         .arg("create")
         .output()?;
 
@@ -117,15 +112,11 @@ fn no_branch() -> Result<()> {
     // Assert.
     //
     assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that!(String::from_utf8(output.stderr.clone())?)
-        .is_equal_to("This repository has no remote.\n".to_string());
-    assert_that!(output.status.success()).is_false();
-    assert_that!(current_branch_name(t.as_path()))
+    assert_that!(String::from_utf8(output.stderr.clone())?).is_empty();
+    assert_that!(output.status.success()).is_true();
+    assert_that!(current_branch_name(local_repo.as_path()))
         .is_ok()
         .is_equal_to("refs/heads/commit-2".to_string());
-
-    // Close explicitly so errors get reported.
-    // t.close()?;
 
     Ok(())
 }

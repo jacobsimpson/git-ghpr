@@ -11,19 +11,25 @@ use tempfile::{tempdir, TempDir};
 
 pub const TEST_BINARY: &str = env!("CARGO_PKG_NAME");
 
-pub fn restore_git_repo(tar_gz: &str) -> Result<TempDir> {
+pub fn restore_git_repo(tar_gz: &str) -> Result<(TempDir, PathBuf)> {
     let mut repo_tar_gz = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     repo_tar_gz.push("tests");
     repo_tar_gz.push("resources");
     repo_tar_gz.push(tar_gz);
 
-    let t = tempdir()?;
+    let temp_dir = tempdir()?;
 
     let tar_gz_file = File::open(repo_tar_gz)?;
     let tar_file = GzDecoder::new(tar_gz_file);
-    Archive::new(tar_file).unpack(t.path())?;
+    Archive::new(tar_file).unpack(temp_dir.path())?;
 
-    Ok(t)
+    let mut local_repo = PathBuf::from(temp_dir.path());
+    local_repo.push("local_repo");
+    if !local_repo.exists() {
+        local_repo.pop();
+    }
+
+    Ok((temp_dir, local_repo))
 }
 
 pub fn current_branch_name(repository_path: &Path) -> Result<String> {

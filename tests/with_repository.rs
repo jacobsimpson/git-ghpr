@@ -1,4 +1,6 @@
 use anyhow::Result;
+use escargot::error::CargoResult;
+use escargot::CargoRun;
 use speculoos::prelude::*;
 
 use crate::common::current_branch_name;
@@ -27,6 +29,29 @@ macro_rules! tar_gz {
     }};
 }
 
+/// Provides some syntactic sugar for running the `ghpr` binary.
+macro_rules! run {
+    ($local_repo:ident -> $ghpr:ident $command:ident) => {
+        $ghpr
+            .command()
+            .current_dir(&$local_repo)
+            .arg(stringify!($command))
+            .output()?
+    };
+}
+
+macro_rules! stdout {
+    ($output:ident) => {
+        String::from_utf8($output.stdout.clone())
+    };
+}
+
+macro_rules! stderr {
+    ($output:ident) => {
+        String::from_utf8($output.stderr.clone())
+    };
+}
+
 /// Tests what happens when command is invoked for a repository that is
 /// initialized, but contains no commits.
 #[test]
@@ -34,29 +59,19 @@ fn initialized_no_commits() -> Result<()> {
     //
     // Arrange.
     //
-    let (_temp_dir, local_repo) =
-        restore_git_repo("initialized_no_commits.tar.gz")?;
-
-    let bin_under_test = escargot::CargoBuild::new()
-        .bin(TEST_BINARY)
-        .current_release()
-        .current_target()
-        .run()?;
+    let (_temp_dir, local_repo) = restore_git_repo(&tar_gz!())?;
+    let ghpr = get_test_binary()?;
 
     //
     // Act.
     //
-    let output = bin_under_test
-        .command()
-        .current_dir(&local_repo)
-        .arg("create")
-        .output()?;
+    let output = run!(local_repo -> ghpr create);
 
     //
     // Assert.
     //
-    assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that!(String::from_utf8(output.stderr.clone())?)
+    assert_that!(stdout!(output)?).is_empty();
+    assert_that!(stderr!(output)?)
         .starts_with("This repository has no remote.");
     assert_that!(output.status.success()).is_false();
 
@@ -69,28 +84,19 @@ fn existing_branch() -> Result<()> {
     //
     // Arrange.
     //
-    let (_temp_dir, local_repo) = restore_git_repo("existing_branch.tar.gz")?;
-
-    let bin_under_test = escargot::CargoBuild::new()
-        .bin(TEST_BINARY)
-        .current_release()
-        .current_target()
-        .run()?;
+    let (_temp_dir, local_repo) = restore_git_repo(&tar_gz!())?;
+    let ghpr = get_test_binary()?;
 
     //
     // Act.
     //
-    let output = bin_under_test
-        .command()
-        .current_dir(&local_repo)
-        .arg("create")
-        .output()?;
+    let output = run!(local_repo -> ghpr create);
 
     //
     // Assert.
     //
-    assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that!(String::from_utf8(output.stderr.clone())?)
+    assert_that!(stdout!(output)?).is_empty();
+    assert_that!(stderr!(output)?)
         .is_equal_to("This repository has no remote.\n".to_string());
     assert_that!(output.status.success()).is_false();
 
@@ -110,28 +116,19 @@ fn no_branch() -> Result<()> {
     //
     // Arrange.
     //
-    let (_temp_dir, local_repo) = restore_git_repo("no_branch.tar.gz")?;
-
-    let bin_under_test = escargot::CargoBuild::new()
-        .bin(TEST_BINARY)
-        .current_release()
-        .current_target()
-        .run()?;
+    let (_temp_dir, local_repo) = restore_git_repo(&tar_gz!())?;
+    let ghpr = get_test_binary()?;
 
     //
     // Act.
     //
-    let output = bin_under_test
-        .command()
-        .current_dir(&local_repo)
-        .arg("create")
-        .output()?;
+    let output = run!(local_repo -> ghpr create);
 
     //
     // Assert.
     //
-    assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that!(String::from_utf8(output.stderr.clone())?).is_empty();
+    assert_that!(stdout!(output)?).is_empty();
+    assert_that!(stderr!(output)?).is_empty();
     assert_that!(output.status.success()).is_true();
     assert_that!(current_branch_name(local_repo.as_path()))
         .is_ok()
@@ -148,27 +145,18 @@ fn unknown_main_branch() -> Result<()> {
     // Arrange.
     //
     let (_temp_dir, local_repo) = restore_git_repo(&tar_gz!())?;
-
-    let bin_under_test = escargot::CargoBuild::new()
-        .bin(TEST_BINARY)
-        .current_release()
-        .current_target()
-        .run()?;
+    let ghpr = get_test_binary()?;
 
     //
     // Act.
     //
-    let output = bin_under_test
-        .command()
-        .current_dir(&local_repo)
-        .arg("create")
-        .output()?;
+    let output = run!(local_repo -> ghpr create);
 
     //
     // Assert.
     //
-    assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that!(String::from_utf8(output.stderr.clone())?).is_equal_to(
+    assert_that!(stdout!(output)?).is_empty();
+    assert_that!(stderr!(output)?).is_equal_to(
         "Could not find a 'main' branch. Tried 'main' and 'master'.\n"
             .to_string(),
     );
@@ -178,4 +166,12 @@ fn unknown_main_branch() -> Result<()> {
         .is_equal_to("refs/heads/commit-2".to_string());
 
     Ok(())
+}
+
+fn get_test_binary() -> CargoResult<CargoRun> {
+    escargot::CargoBuild::new()
+        .bin(TEST_BINARY)
+        .current_release()
+        .current_target()
+        .run()
 }

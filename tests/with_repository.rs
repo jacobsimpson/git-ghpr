@@ -72,8 +72,9 @@ fn existing_branch() -> Result<()> {
     // Assert.
     //
     assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that!(String::from_utf8(output.stderr.clone())?).is_empty();
-    assert_that!(output.status.success()).is_true();
+    assert_that!(String::from_utf8(output.stderr.clone())?)
+        .is_equal_to("This repository has no remote.\n".to_string());
+    assert_that!(output.status.success()).is_false();
 
     // Close explicitly so errors get reported.
     t.close()?;
@@ -116,8 +117,9 @@ fn no_branch() -> Result<()> {
     // Assert.
     //
     assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that!(String::from_utf8(output.stderr.clone())?).is_empty();
-    assert_that!(output.status.success()).is_true();
+    assert_that!(String::from_utf8(output.stderr.clone())?)
+        .is_equal_to("This repository has no remote.\n".to_string());
+    assert_that!(output.status.success()).is_false();
     assert_that!(current_branch_name(t.as_path()))
         .is_ok()
         .is_equal_to("refs/heads/commit-2".to_string());

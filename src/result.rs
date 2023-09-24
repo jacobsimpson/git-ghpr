@@ -12,6 +12,7 @@ pub enum Error {
     MissingBranchParameter(String),
     NoCommitMessage,
     NoRepository,
+    NoRemote,
     NoSelectedCommit,
     UnableToCreateBranch {
         branch_name: String,
@@ -32,6 +33,7 @@ impl std::fmt::Display for Error {
                 f,
                 "Could not find a repository. Has `git init` been run?"
             ),
+            Self::NoRemote => write!(f,"This repository has no remote."),
             Self::NoSelectedCommit => write!(
                 f,
                 "No currently selected commit. Are there any commits on this repository?"

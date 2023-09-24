@@ -20,7 +20,7 @@ pub async fn create_pull_request(
     let current_commit = get_selected_commit(&repo)?;
     info!("Current commit = {}", current_commit.id());
 
-    let _current_branch = match get_branch_for_commit(&repo, &current_commit)? {
+    let current_branch = match get_branch_for_commit(&repo, &current_commit)? {
         Some(b) => b,
         None => {
             info!("No existing branch, creating a new one.");
@@ -32,6 +32,13 @@ pub async fn create_pull_request(
             )?
         }
     };
+
+    if let Err(e) = current_branch.upstream() {
+        if e.code() == git2::ErrorCode::NotFound {
+            return Err(Error::NoRemote);
+        }
+        return Err(Error::Generic);
+    }
 
     Ok(Message::Empty)
 }

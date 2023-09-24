@@ -3,10 +3,14 @@ use assert_cmd::assert::OutputAssertExt;
 use speculoos::prelude::*;
 use tempfile::tempdir;
 
+use crate::common::TEST_BINARY;
+
+mod common;
+
 #[test]
 fn without_valid_repository() -> Result<()> {
     let bin_under_test = escargot::CargoBuild::new()
-        .bin("git-github-pull-request")
+        .bin(TEST_BINARY)
         .current_release()
         .current_target()
         .run()?;

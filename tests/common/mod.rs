@@ -9,7 +9,7 @@ use git2::Repository;
 use tar::Archive;
 use tempfile::{tempdir, TempDir};
 
-pub const TEST_BINARY: &str = "git-github-pull-request";
+pub const TEST_BINARY: &str = env!("CARGO_PKG_NAME");
 
 pub fn restore_git_repo(tar_gz: &str) -> Result<TempDir> {
     let mut repo_tar_gz = PathBuf::from(env!("CARGO_MANIFEST_DIR"));

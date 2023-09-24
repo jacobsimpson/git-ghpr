@@ -1,5 +1,5 @@
 [package]
-name = "git-github-pull-request"
+name = "git-ghpr"
 version = "0.1.0"
 edition = "2021"
 

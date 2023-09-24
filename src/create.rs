@@ -83,6 +83,10 @@ fn create_new_branch<'a>(
         }
     })?;
 
+    // Setting `head` like this, with `refs/heads/XYZ`, is what sets the current
+    // current branch for `git` commands. However, doing it this way means that
+    // `libgit2` doesn't recognize it as a branch for `is_head` or
+    // `symbolic_target`.
     repo.set_head(&format!("refs/heads/{branch_name}"))
         .map_err(|_e| Error::UnableToSelectBranch(branch_name))?;
 

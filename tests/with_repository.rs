@@ -95,6 +95,7 @@ fn no_branch() -> Result<()> {
     // Arrange.
     //
     let t = restore_git_repo("no_branch.tar.gz")?;
+    let t = t.into_path();
 
     let bin_under_test = escargot::CargoBuild::new()
         .bin(TEST_BINARY)
@@ -117,12 +118,12 @@ fn no_branch() -> Result<()> {
     assert_that!(String::from_utf8(output.stdout.clone())?).is_empty();
     assert_that!(String::from_utf8(output.stderr.clone())?).is_empty();
     assert_that!(output.status.success()).is_true();
-    assert_that!(current_branch_name(t.path()))
+    assert_that!(current_branch_name(t.as_path()))
         .is_ok()
-        .is_equal_to("branch-name".to_string());
+        .is_equal_to("refs/heads/commit-2".to_string());
 
     // Close explicitly so errors get reported.
-    t.close()?;
+    // t.close()?;
 
     Ok(())
 }

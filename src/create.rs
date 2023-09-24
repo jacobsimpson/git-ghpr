@@ -10,6 +10,20 @@ use crate::result::Error;
 use crate::result::Message;
 use crate::result::Result;
 
+/// Creates a pull request for the current commit. This is a safe operation, it
+/// will do it's best to detect the current state of the repository and Github,
+/// and fill in the missing pieces, or return a useful error message.
+/// - Check if there is a remote for the repository.
+/// * Find the current commit.
+/// - Find the base branch.
+/// - Check the base branch is remote.
+/// - Check the base branch remote is up to date.
+/// - Check the base branch is main or there is a base branch PR.
+/// * Find the branch for the current commit.
+/// - Create a branch if one does not exist.
+/// - Push the branch upstream if necessary, possibly force push.
+/// - Check if there is a PR for this branch.
+/// - Create a PR for this branch.
 pub async fn create_pull_request(
     branch_name_template: &str,
     branch_name_parameters: &HashMap<String, String>,

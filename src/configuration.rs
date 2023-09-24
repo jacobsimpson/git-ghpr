@@ -28,6 +28,7 @@ use directories::{BaseDirs, ProjectDirs};
 use figment::providers::{Env, Format, Toml};
 use figment::Figment;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use tracing::error;
 
 use crate::result::Error;
@@ -55,14 +56,14 @@ for more information."#)]
     pub branch_name_template: Option<String>,
 
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: CmdCommands,
 }
 
 #[derive(Subcommand, Serialize, Deserialize, Debug)]
-pub enum Commands {
+pub enum CmdCommands {
     Create {
         #[arg(short, long)]
-        branch_prefix: Option<String>,
+        jira: Option<String>,
     },
 }
 
@@ -73,19 +74,52 @@ struct FileOptions {
 
 #[derive(Debug)]
 pub struct Configuration {
-    branch_name_template: String,
+    pub branch_name_template: String,
 
     pub verbose: u8,
 
     pub command: Commands,
 }
 
-fn or(one: Option<String>, two: Option<String>, name: &str) -> Result<String> {
-    if one.is_some() {
-        return Ok(one.unwrap());
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Commands {
+    Create {
+        branch_name_parameters: HashMap<String, String>,
+    },
+}
+
+impl From<CmdCommands> for Commands {
+    fn from(c: CmdCommands) -> Self {
+        match c {
+            CmdCommands::Create { jira } => match jira {
+                Some(v) => Self::Create {
+                    branch_name_parameters: HashMap::from([(
+                        "jira".to_string(),
+                        v,
+                    )]),
+                },
+                None => Self::Create {
+                    branch_name_parameters: HashMap::new(),
+                },
+            },
+        }
     }
-    if two.is_some() {
-        return Ok(two.unwrap());
+}
+
+fn first_of(
+    one: Option<String>,
+    two: Option<String>,
+    three: Option<String>,
+    name: &str,
+) -> Result<String> {
+    if let Some(v) = one {
+        return Ok(v);
+    }
+    if let Some(v) = two {
+        return Ok(v);
+    }
+    if let Some(v) = three {
+        return Ok(v);
     }
     Err(Error::BadParameter(name.to_string()))
 }
@@ -95,13 +129,14 @@ fn merge(
     cmd_options: CmdOptions,
 ) -> Result<Configuration> {
     Ok(Configuration {
-        branch_name_template: or(
+        branch_name_template: first_of(
             cmd_options.branch_name_template,
             file_options.branch_name_template,
+            Some("{{summary}}".to_string()),
             "branch_name_template",
         )?,
         verbose: cmd_options.verbose,
-        command: cmd_options.command,
+        command: Commands::from(cmd_options.command),
     })
 }
 

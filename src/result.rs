@@ -7,19 +7,26 @@ use git2::ErrorCode;
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     BadParameter(String),
+    BranchTemplateMalformed(String),
+    Generic,
+    MissingBranchParameter(String),
+    NoCommitMessage,
     NoRepository,
     NoSelectedCommit,
     UnableToCreateBranch {
         branch_name: String,
         base_commit: String,
     },
-    Generic,
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             Self::BadParameter(m) => write!(f, "{}", m),
+            Self::BranchTemplateMalformed(m)=>write!(f,"{}", m),
+            Self::Generic => write!(f, "{}", "Generic"),
+            Self::MissingBranchParameter(p)=>write!(f, "Missing parameter {}",p ),
+            Self::NoCommitMessage=>write!(f, "No commit message available for generating the branch name."),
             Self::NoRepository => write!(
                 f,
                 "Could not find a repository. Has `git init` been run?"
@@ -36,7 +43,6 @@ impl std::fmt::Display for Error {
                 "Could not create branch '{}' on commit {}.",
                 branch_name, base_commit
             ),
-            Self::Generic => write!(f, "{}", "Generic"),
         }
     }
 }

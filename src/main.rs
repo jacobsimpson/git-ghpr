@@ -38,8 +38,14 @@ async fn main() -> ExitCode {
 
 async fn execute(options: configuration::Configuration) -> Result<Message> {
     match options.command {
-        Commands::Create { branch_prefix: _ } => {
-            create::create_pull_request().await
+        Commands::Create {
+            branch_name_parameters,
+        } => {
+            create::create_pull_request(
+                &options.branch_name_template,
+                &branch_name_parameters,
+            )
+            .await
         }
     }
 }

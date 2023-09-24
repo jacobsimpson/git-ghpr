@@ -81,6 +81,13 @@ fn existing_branch() -> Result<()> {
 }
 
 /// Tests what happens for `create` on a commit that doesn't have a branch.
+///
+/// ◇ 24cf4e2 22d (main) Initial commit.
+/// ┃
+/// ● e9f4920 22d Commit 2.
+///
+/// This should result in the creation of a new branch with a name based on the
+/// configured branch name template.
 #[test]
 fn no_branch() -> Result<()> {
     //
@@ -107,9 +114,8 @@ fn no_branch() -> Result<()> {
     // Assert.
     //
     assert_that(&String::from_utf8(output.stdout.clone())?).is_empty();
-    assert_that(&String::from_utf8(output.stderr.clone())?)
-        .starts_with("Could not create branch ");
-    assert_that(&output.status.success()).is_false();
+    assert_that(&String::from_utf8(output.stderr.clone())?).is_empty();
+    assert_that(&output.status.success()).is_true();
 
     // Close explicitly so errors get reported.
     t.close()?;

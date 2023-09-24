@@ -20,7 +20,7 @@ use crate::result::Result;
 /// - Check the base branch remote is up to date.
 /// - Check the base branch is main or there is a base branch PR.
 /// * Find the branch for the current commit.
-/// - Create a branch if one does not exist.
+/// * Create a branch if one does not exist.
 /// - Push the branch upstream if necessary, possibly force push.
 /// - Check if there is a PR for this branch.
 /// - Create a PR for this branch.
@@ -31,14 +31,40 @@ pub async fn create_pull_request(
     info!("Opening the local git repository.");
     let repo = Repository::discover(".")?;
 
+    check_has_remote(&repo)?;
+
+    let current_commit = get_selected_commit(&repo)?;
+
+    let current_branch = get_or_create_branch(
+        &repo,
+        &current_commit,
+        branch_name_template,
+        branch_name_parameters,
+    )?;
+
+    if let Err(e) = current_branch.upstream() {
+        if e.code() != git2::ErrorCode::NotFound {
+            return Err(Error::Generic);
+        }
+    }
+
+    Ok(Message::Empty)
+}
+
+fn check_has_remote<'a>(repo: &'a Repository) -> Result<()> {
     let remotes = repo.remotes()?;
     if remotes.len() == 0 {
         return Err(Error::NoRemote);
     }
+    Ok(())
+}
 
-    let current_commit = get_selected_commit(&repo)?;
-    info!("Current commit = {}", current_commit.id());
-
+fn get_or_create_branch<'a>(
+    repo: &'a Repository,
+    current_commit: &Commit<'a>,
+    branch_name_template: &str,
+    branch_name_parameters: &HashMap<String, String>,
+) -> Result<Branch<'a>> {
     let current_branch = match get_branch_for_commit(&repo, &current_commit)? {
         Some(b) => b,
         None => {
@@ -51,14 +77,7 @@ pub async fn create_pull_request(
             )?
         }
     };
-
-    if let Err(e) = current_branch.upstream() {
-        if e.code() != git2::ErrorCode::NotFound {
-            return Err(Error::Generic);
-        }
-    }
-
-    Ok(Message::Empty)
+    Ok(current_branch)
 }
 
 fn get_branch_for_commit<'a>(

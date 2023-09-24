@@ -14,7 +14,10 @@ pub enum Error {
     NoBaseBranch,
     NoCommitMessage,
     NoRepository,
-    NoRemote,
+    /// Indicates that the local repository does not have a remote associated
+    /// with it.
+    NoRemoteRepository,
+    NoRemoteBranch(String),
     NoSelectedCommit,
     UnableToCreateBranch {
         branch_name: String,
@@ -38,7 +41,8 @@ impl std::fmt::Display for Error {
                 f,
                 "Could not find a repository. Has `git init` been run?"
             ),
-            Self::NoRemote => write!(f,"This repository has no remote."),
+            Self::NoRemoteRepository => write!(f,"This repository has no remote."),
+            Self::NoRemoteBranch(name)=>write!(f,"The branch {name} does not have a remote."),
             Self::NoSelectedCommit => write!(
                 f,
                 "No currently selected commit. Are there any commits on this repository?"

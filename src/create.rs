@@ -16,7 +16,7 @@ use crate::result::Result;
 /// * Check if there is a remote for the repository.
 /// * Find the current commit.
 /// * Find the base branch.
-/// - Check the base branch is remote.
+/// * Check the base branch is remote.
 /// - Check the base branch remote is up to date.
 /// - Check the base branch is main or there is a base branch PR.
 /// * Find the branch for the current commit.
@@ -35,7 +35,9 @@ pub async fn create_pull_request(
 
     let current_commit = get_selected_commit(&repo)?;
 
-    let _base_branch = find_base_branch(&repo, &current_commit)?;
+    let base_branch = find_base_branch(&repo, &current_commit)?;
+
+    check_branch_has_remote(&base_branch)?;
 
     let current_branch = get_or_create_branch(
         &repo,
@@ -51,6 +53,16 @@ pub async fn create_pull_request(
     }
 
     Ok(Message::Empty)
+}
+
+fn check_branch_has_remote(branch: &Branch<'a>) -> Result<()> {
+    if let Err(e) = branch.upstream() {
+        if e.code() == git2::ErrorCode::NotFound {
+            return Err(Error::NoRemoteBranch(branch.name()));
+        }
+        return Err(Error::Generic);
+    }
+    Ok(())
 }
 
 fn check_has_remote<'a>(repo: &'a Repository) -> Result<()> {

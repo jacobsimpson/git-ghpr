@@ -15,7 +15,7 @@ use crate::result::Result;
 /// and fill in the missing pieces, or return a useful error message.
 /// * Check if there is a remote for the repository.
 /// * Find the current commit.
-/// - Find the base branch.
+/// * Find the base branch.
 /// - Check the base branch is remote.
 /// - Check the base branch remote is up to date.
 /// - Check the base branch is main or there is a base branch PR.
@@ -34,6 +34,8 @@ pub async fn create_pull_request(
     check_has_remote(&repo)?;
 
     let current_commit = get_selected_commit(&repo)?;
+
+    let _base_branch = find_base_branch(&repo, &current_commit)?;
 
     let current_branch = get_or_create_branch(
         &repo,
@@ -234,4 +236,66 @@ where
     let variable = m[start + 1..end].to_string();
 
     Some(variable)
+}
+
+fn get_main_branch_commit<'a>(
+    repo: &'a Repository,
+) -> Result<(Commit, String)> {
+    // There is a `mainBranch` property in the branchless section of a
+    // configured git repo. I would prefer to take the main branch name from
+    // there, so behavior is consistent with branchless.
+    let branches = repo.branches(Some(BranchType::Local))?;
+
+    for branch in branches {
+        match branch {
+            Ok((branch, _branch_type)) => {
+                if branch.name()? == Some("main") {
+                    return Ok((
+                        branch.get().peel_to_commit().unwrap(),
+                        "main".to_string(),
+                    ));
+                } else if branch.name()? == Some("master") {
+                    return Ok((
+                        branch.get().peel_to_commit().unwrap(),
+                        "master".to_string(),
+                    ));
+                }
+            }
+            Err(e) => println!("Couldn't list branch: {:?}", e),
+        };
+    }
+
+    Err(Error::UnknownMainBranch)
+}
+
+fn find_base_branch<'a>(
+    repo: &'a Repository,
+    current_commit: &'a Commit,
+) -> Result<String> {
+    let (main_commit, main_branch_name) = get_main_branch_commit(repo)?;
+
+    let merge_base = repo.merge_base(main_commit.id(), current_commit.id())?;
+
+    let mut commit = current_commit.clone();
+
+    while commit.id() != merge_base {
+        if commit.parents().len() == 0 {
+            return Err(Error::NoBaseBranch);
+        }
+
+        if commit.parents().len() > 1 {
+            // This error message would work better with the branch name when it is
+            // available. I didn't do it at the time because of time constraints.
+            return Err(Error::MultipleParentCommits(commit.id().to_string()));
+        }
+
+        let parent_commit = commit.parents().nth(0).unwrap();
+
+        match get_branch_for_commit(&repo, &parent_commit)? {
+            Some(branch) => return Ok(branch.name()?.unwrap().to_string()),
+            None => commit = parent_commit,
+        };
+    }
+
+    Ok(main_branch_name)
 }

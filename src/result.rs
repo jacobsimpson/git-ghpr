@@ -10,6 +10,8 @@ pub enum Error {
     BranchTemplateMalformed(String),
     Generic,
     MissingBranchParameter(String),
+    MultipleParentCommits(String),
+    NoBaseBranch,
     NoCommitMessage,
     NoRepository,
     NoRemote,
@@ -19,6 +21,7 @@ pub enum Error {
         base_commit: String,
     },
     UnableToSelectBranch(String),
+    UnknownMainBranch,
 }
 
 impl std::fmt::Display for Error {
@@ -28,6 +31,8 @@ impl std::fmt::Display for Error {
             Self::BranchTemplateMalformed(m)=>write!(f,"{m}"),
             Self::Generic => write!(f, "{}", "Generic"),
             Self::MissingBranchParameter(p)=>write!(f, "Missing parameter {p}"),
+            Self::MultipleParentCommits(c)=>write!(f,"Commit {} has multiple parents. Can not auto detect a base branch.",c),
+            Self::NoBaseBranch => write!(f, "Reached the root of the repository and couldn't find a base branch."),
             Self::NoCommitMessage=>write!(f, "No commit message available for generating the branch name."),
             Self::NoRepository => write!(
                 f,
@@ -45,7 +50,8 @@ impl std::fmt::Display for Error {
                 f,
                 "Could not create branch '{branch_name}' on commit {base_commit}.",
             ),
-            Self::UnableToSelectBranch(b) => write!(f, "Could not switch to branch '{b}'.")
+            Self::UnableToSelectBranch(b) => write!(f, "Could not switch to branch '{b}'."),
+            Self:: UnknownMainBranch=> write!(f, "Could not find a 'main' branch. Tried 'main' and 'master'."),
         }
     }
 }

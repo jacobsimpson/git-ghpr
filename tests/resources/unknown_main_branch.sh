@@ -11,8 +11,7 @@ mkdir remote_repo
 (
     cd remote_repo
 
-    git init .
-    git branchless init --main-branch main
+    git init -b xyz .
     echo "Some text" > README.md
     git add README.md
     git commit -m "Initial commit."
@@ -21,13 +20,13 @@ mkdir remote_repo
 #
 # Clone the remote repository.
 #
+
 git clone remote_repo local_repo
 (
     cd local_repo
-    git branchless init
 
     # Switch from the branch name to the hash as the currently selected pointer.
-    git checkout $(git rev-parse HEAD)
+    git checkout -b commit-2
     echo "More text" > file1.txt
     git add file1.txt
     git commit -m "Commit 2."

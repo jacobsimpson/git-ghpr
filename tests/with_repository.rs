@@ -168,6 +168,36 @@ fn unknown_main_branch() -> Result<()> {
     Ok(())
 }
 
+/// Checks what happens if there is a base branch that isn't on the remote
+/// repository.
+#[test]
+fn base_branch_not_remote() -> Result<()> {
+    //
+    // Arrange.
+    //
+    let (_temp_dir, local_repo) = restore_git_repo(&tar_gz!())?;
+    let ghpr = get_test_binary()?;
+
+    //
+    // Act.
+    //
+    let output = run!(local_repo -> ghpr create);
+
+    //
+    // Assert.
+    //
+    assert_that!(stdout!(output)?).is_empty();
+    assert_that!(stderr!(output)?).is_equal_to(
+        "The branch base_branch does not have a remote.\n".to_string(),
+    );
+    assert_that!(output.status.success()).is_false();
+    assert_that!(current_branch_name(local_repo.as_path()))
+        .is_ok()
+        .is_equal_to("refs/heads/pr_branch".to_string());
+
+    Ok(())
+}
+
 fn get_test_binary() -> CargoResult<CargoRun> {
     escargot::CargoBuild::new()
         .bin(TEST_BINARY)

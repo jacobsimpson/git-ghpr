@@ -55,10 +55,14 @@ pub async fn create_pull_request(
     Ok(Message::Empty)
 }
 
-fn check_branch_has_remote(branch: &Branch<'a>) -> Result<()> {
+fn check_branch_has_remote<'a>(branch: &Branch<'a>) -> Result<()> {
     if let Err(e) = branch.upstream() {
         if e.code() == git2::ErrorCode::NotFound {
-            return Err(Error::NoRemoteBranch(branch.name()));
+            let name = match branch.name()? {
+                Some(n) => n,
+                None => return Err(Error::Generic),
+            };
+            return Err(Error::NoRemoteBranch(name.to_string()));
         }
         return Err(Error::Generic);
     }
@@ -68,7 +72,7 @@ fn check_branch_has_remote(branch: &Branch<'a>) -> Result<()> {
 fn check_has_remote<'a>(repo: &'a Repository) -> Result<()> {
     let remotes = repo.remotes()?;
     if remotes.len() == 0 {
-        return Err(Error::NoRemote);
+        return Err(Error::NoRemoteRepository);
     }
     Ok(())
 }
@@ -252,7 +256,7 @@ where
 
 fn get_main_branch_commit<'a>(
     repo: &'a Repository,
-) -> Result<(Commit, String)> {
+) -> Result<(Commit, Branch<'a>)> {
     // There is a `mainBranch` property in the branchless section of a
     // configured git repo. I would prefer to take the main branch name from
     // there, so behavior is consistent with branchless.
@@ -264,12 +268,12 @@ fn get_main_branch_commit<'a>(
                 if branch.name()? == Some("main") {
                     return Ok((
                         branch.get().peel_to_commit().unwrap(),
-                        "main".to_string(),
+                        branch,
                     ));
                 } else if branch.name()? == Some("master") {
                     return Ok((
                         branch.get().peel_to_commit().unwrap(),
-                        "master".to_string(),
+                        branch,
                     ));
                 }
             }
@@ -283,8 +287,8 @@ fn get_main_branch_commit<'a>(
 fn find_base_branch<'a>(
     repo: &'a Repository,
     current_commit: &'a Commit,
-) -> Result<String> {
-    let (main_commit, main_branch_name) = get_main_branch_commit(repo)?;
+) -> Result<Branch<'a>> {
+    let (main_commit, main_branch) = get_main_branch_commit(repo)?;
 
     let merge_base = repo.merge_base(main_commit.id(), current_commit.id())?;
 
@@ -304,10 +308,10 @@ fn find_base_branch<'a>(
         let parent_commit = commit.parents().nth(0).unwrap();
 
         match get_branch_for_commit(&repo, &parent_commit)? {
-            Some(branch) => return Ok(branch.name()?.unwrap().to_string()),
+            Some(branch) => return Ok(branch),
             None => commit = parent_commit,
         };
     }
 
-    Ok(main_branch_name)
+    Ok(main_branch)
 }
